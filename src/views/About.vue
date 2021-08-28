@@ -1,7 +1,9 @@
 <template>
   <div class="about">
     <h1>Admin Functions</h1>
+    <p v-if="error">{{error}}</p>
     <button id="newQuote" v-on:click="newQuote">Send Quote</button>
+    <button id="reset" v-on:click="reset">Reset Quotes</button>
   </div>
 </template>
 
@@ -37,10 +39,12 @@ export default {
       let random = Math.floor(Math.random() * unusedQuotes.length);
       const newQuote = unusedQuotes[random];
       console.log(newQuote);
-      const chgStatus = {Used: true, Active: false};
+      let chgStatus = {Used: true, Active: false};
+      this.sendQuote(newQuote)
       await axios.put("/quotes/" + this.activeQuote[0]._id, qs.stringify(chgStatus))
         .then(response => {
-          if (response.status >= 200 && response.status <= 210) {
+          // if (response.status >= 200 && response.status <= 210) {
+          if (response.status === 200) {
             chgStatus = {Active: true};
             console.log(chgStatus);
           }
@@ -48,12 +52,32 @@ export default {
         .catch(err => {
           this.error = err;
         })
-      await axios.put("/quotes/" + newQuote._id, qs.stringify({Active: true}))
+      await axios.put("/quotes/" + newQuote._id, qs.stringify(chgStatus))
         .then(response => {
           if (response.status === 200) {
               window.alert('Quote Updated');
           }
         })
+    },
+    reset: function() {
+      axios.put("/quotes")
+        .then(response => {
+          if (response.status === 200) {
+            window.alert(response.data);
+          }
+        })
+        .catch(err => {
+          this.error = err;
+        })
+    },
+    sendQuote: function(quote) {
+      let message = quote.Quote + ' -- ' + quote.Author
+      if (quote.Source) {
+        message = message + ', ' + quote.Source;
+      }
+      console.log(message);
+      const currNumbers = this.phoneNumbers.filter(num => num.active);
+      axios.post("/messages", qs.stringify({message: message, currNumbers: currNumbers}))
     }
   }
 }
