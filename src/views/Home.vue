@@ -29,6 +29,13 @@
         Quotes will not repeat in a given calendar year. Database will reset at the start of a new year.
         </p>
       </div>
+      <div>
+        <input id="numberEntry" type="text" v-model="phone" placeholder="(xxx) xxx-xxxx">
+      </div>
+      <div id="phoneButtons">
+        <button id="save" v-on:click="saveNumber">Subscribe</button>
+        <button id="delete" v-on:click="removeNumber">Unsubscribe</button>
+      </div>
     </main>
 
   </div>
@@ -36,6 +43,8 @@
 
 <script>
   const axios = require("axios");
+  const qs = require("qs");
+  // const FormData = require("form-data");
 // @ is an alias to /src
 // import HelloWorld from '@/components/HelloWorld.vue'
 
@@ -63,6 +72,61 @@ export default {
       console.log(this.phoneNumbers)
     })
 
+  },
+  methods: {
+    saveNumber: function() {
+      const exist = this.phoneNumbers.filter(num => num.phone === this.phone);
+      if (exist.length > 0) {
+        if (exist[0].active) {
+          window.alert('This number, ' + this.phone + ' is already subscribed');
+        }
+        else {
+          const data = {active: true};
+          axios.put("/numbers/" + exist[0]._id, qs.stringify(data))
+          .then(response => {
+            if (response.status === 200) {
+              window.alert('Your number is now subscribed');
+            }
+          })
+        }
+      }
+      else {
+        var phData = {phone: this.phone, active: true};
+        axios.post("/numbers", qs.stringify(phData), {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        })
+          .then(response => {
+            if (response.status === 200) {
+              window.alert('Your number was successfully registered');
+              this.phone = "";
+            }
+          })
+          .catch(err => {
+            this.error = err
+          })
+      }
+    },
+    removeNumber: function() {
+      let updateNumber = this.phoneNumbers.filter(num => num.phone === this.phone);
+      if (updateNumber.length > 0 && updateNumber[0].active) {
+        let data = {active: false}
+        axios.put("/numbers/" + updateNumber[0]._id, qs.stringify(data))
+          .then(response => {
+            if (response.status === 200) {
+              window.alert('Your number was successfully unsubscribed')
+              this.phone = "";
+            }
+          })
+          .catch(err => {
+            this.error = err;
+          })
+      }
+      else {
+        window.alert('The number you entered,' + this.phone + ' is not currently subscribed');
+      }
+    }
   }
 }
 </script>
@@ -99,6 +163,36 @@ export default {
   padding-top: 15px;
   font-size: 20px;
   color: #000;
+}
+
+#numberEntry {
+  height: 25px;
+  font-size: 16px;
+  border-width: 2px;
+  margin-top: 10px;
+}
+
+button {
+  height: 40px;
+  width: 100px;
+  margin-top: 20px;
+  color: white;
+  font-weight: bold;
+  border-width: 2px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+button:hover {
+  cursor: pointer;
+}
+
+#save {
+  background-color: navy;
+}
+
+#delete {
+  background-color: crimson;
 }
 
 @media screen and (max-width: 950px) {
