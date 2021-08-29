@@ -1,24 +1,9 @@
 <template>
   <div class="home">
-    <header>
-			<img
-				class="headerImage"
-				id="leftImage"
-				alt="Hippo logo"
-				src="../assets/images/hippo.jpg"
-			/>
-			<p class="title">Internet Hippo's Quote of the Day</p>
-			<img
-				class="headerImage"
-				id="rightImage"
-				alt="Hippo logo"
-				src="../assets/images/hippo.jpg"
-			/>
-		</header>
     <main>
       <div id="currentQuote">
         <p>{{currentQuote[0].Quote}}</p>
-        <p v-if="currentQuote[0].Source">
+        <p>
           <span>{{currentQuote[0].Author}}</span>
           <span id="quoteSource" v-if="currentQuote[0].Source">, {{currentQuote[0].Source}} </span>
         </p>
@@ -33,7 +18,7 @@
         <input id="numberEntry" type="text" v-model="phone" placeholder="(xxx) xxx-xxxx">
       </div>
       <div id="phoneButtons">
-        <button id="save" v-on:click="saveNumber">Subscribe</button>
+        <button id="save" v-on:click="validatePhoneNumber">Subscribe</button>
         <button id="delete" v-on:click="removeNumber">Unsubscribe</button>
       </div>
     </main>
@@ -44,7 +29,6 @@
 <script>
   const axios = require("axios");
   const qs = require("qs");
-  // const FormData = require("form-data");
 // @ is an alias to /src
 // import HelloWorld from '@/components/HelloWorld.vue'
 
@@ -69,11 +53,21 @@ export default {
     })
     await axios.get("numbers").then(response => {
       this.phoneNumbers = response.data
-      console.log(this.phoneNumbers)
     })
 
   },
   methods: {
+    validatePhoneNumber: function() {
+      const phoneRegex = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/
+      if (phoneRegex.test(this.phone)) {
+        const formattedPhoneNumber =
+          this.phone.replace(phoneRegex, "($1) $2-$3");
+          this.phone = formattedPhoneNumber;
+          this.saveNumber();
+      } else {
+        window.alert(this.phone + ' is not a proper North American phone number');
+      }
+    },
     saveNumber: function() {
       const exist = this.phoneNumbers.filter(num => num.phone === this.phone);
       if (exist.length > 0) {
@@ -132,28 +126,6 @@ export default {
 </script>
 
 <style scoped>
-
-.headerImage {
-	width: 150px;
-	height: 150px;
-	position: absolute;
-	padding: 20px;
-}
-#leftImage {
-	top: 0px;
-	left: 0px;
-}
-#rightImage {
-	top: 0px;
-	right: 0px;
-}
-
-.title {
-	font-size: 46px;
-	font-weight: bold;
-	text-align: center;
-	font-family: cursive;
-}
 
 #quoteSource {
   font-style: italic

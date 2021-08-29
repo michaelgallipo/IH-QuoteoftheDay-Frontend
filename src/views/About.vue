@@ -1,27 +1,43 @@
 <template>
   <div class="about">
+    <nav id="nav">
+      <router-link to="/">HOME</router-link>
+    </nav>
     <h1>Admin Functions</h1>
     <p v-if="error">{{error}}</p>
     <button id="newQuote" v-on:click="newQuote">Send Quote</button>
     <button id="reset" v-on:click="reset">Reset Quotes</button>
+      <div id="quoteEntry">
+        <h2> Enter New Quote </h2>
+        <quoteForm v-bind:quoteData="quoteData" />
+        <button id="addQuote" v-on:click="saveQuote()">Save Quote</button>
+      </div>
   </div>
 </template>
 
 <script>
+import quoteForm from "@/components/QuoteForm.vue";
 const axios = require("axios");
 const qs = require("qs");
 
 export default {
   name: 'about',
-  // components: {
-  //   HelloWorld
-  // }
+  components: {
+    quoteForm
+  },
   data: function() {
     return {
       quotes: [],
       activeQuote: "",
       phoneNumbers: [],
-      error: ""
+      error: "",
+      quoteData: {
+        Quote: "",
+        Author: "",
+        Source: "",
+        Active: false,
+        Used: false
+      }
     };
   },
   created: async function() {
@@ -78,7 +94,41 @@ export default {
       console.log(message);
       const currNumbers = this.phoneNumbers.filter(num => num.active);
       axios.post("/messages", qs.stringify({message: message, currNumbers: currNumbers}))
+    },
+    saveQuote: function() {
+      axios.post("/quotes", qs.stringify(this.quoteData))
+      .then (response => {
+        if (response.status === 200) {
+          window.alert('Quote Successfully Saved')
+          this.quoteData.Quote = "";
+          this.quoteData.Author = "";
+          this.quoteData.Source = "";
+        }
+      })
+      .catch(err => {
+        this.error = err;
+      })
     }
   }
 }
 </script>
+
+<style scoped>
+#newQuote {
+  background-color: navy;
+}
+
+#reset {
+  background-color: green;
+  width: 125px;
+}
+
+#addQuote {
+  background-color: purple;
+  width: 125px;
+}
+
+#quoteEntry {
+  margin-top: 40px;
+}
+</style>
